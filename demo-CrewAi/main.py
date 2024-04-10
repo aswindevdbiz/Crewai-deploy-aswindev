@@ -1,9 +1,8 @@
-from fastapi import FastAPI, File, UploadFile
-from secrets import token_hex
+from fastapi import FastAPI
 from dotenv import load_dotenv
-from crud.create import CrudCreator
-from crud.read import CrudReader
-from crud.update import CrudUpdate
+from .crud.create import CrudCreator
+from .crud.read import CrudReader
+from .crud.update import CrudUpdate
 
 app = FastAPI()
 load_dotenv()

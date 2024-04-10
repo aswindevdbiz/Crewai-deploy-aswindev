@@ -1,4 +1,4 @@
-from utils.mongodb import open_connection, close_connection
+from ..utils.mongodb import open_connection, close_connection
 
 class CrudReader:
     @staticmethod

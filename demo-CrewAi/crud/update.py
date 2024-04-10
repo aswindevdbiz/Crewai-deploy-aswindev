@@ -1,9 +1,9 @@
 from bson import ObjectId
-from models.tools import Tool
-from models.agents import Agent
-from models.tasks import Task
-from models.crews import Crew
-from utils.mongodb import open_connection, close_connection
+from ..models.tools import Tool
+from ..models.agents import Agent
+from ..models.tasks import Task
+from ..models.crews import Crew
+from ..utils.mongodb import open_connection, close_connection
 
 class CrudUpdate:
     @staticmethod
