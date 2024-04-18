@@ -2,11 +2,8 @@ from typing import List
 from pydantic import BaseModel
 
 
-class Crew(BaseModel):
+class Project(BaseModel):
     name: str
     description: str | None = None
-    tasks: list[str]
-    agents: list[str]
-    image: str
+    crews: list[str]
     active: bool = True
-    

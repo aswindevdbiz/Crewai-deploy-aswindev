@@ -3,6 +3,7 @@ from ..models.tools import Tool
 from ..models.agents import Agent
 from ..models.tasks import Task
 from ..models.crews import Crew
+from ..models.projects import Project
 from ..utils.mongodb import open_connection, close_connection
 
 class CrudUpdate:
@@ -98,12 +99,19 @@ class CrudUpdate:
             db =open_connection()
             collection = db["Crew"]
             task_collection = db["Task"]
+            agent_collection = db["Agent"]
 
             # Check if all the tasks exist in the Task collection
             task_ids = [ObjectId(task_id) for task_id in crew["tasks"]]
             task_docs = task_collection.find({"_id": {"$in": task_ids}})
             if len(list(task_docs)) != len(task_ids):
                 return {"status": False, "data": [{"error": "One or more tasks not found in the Task collection."}]}
+            
+            # Check if all the agents exist in the Agent collection
+            agent_ids = [ObjectId(agent_id) for agent_id in crew["agents"]]
+            agent_docs = agent_collection.find({"_id": {"$in": agent_ids}})
+            if len(list(agent_docs)) != len(agent_ids):
+                return {"status": False, "data": [{"error": "One or more agents not found in the Agent collection."}]}
 
             # Update the agent in the database
             crew_to_be_updated = collection.find_one_and_update(
@@ -119,4 +127,33 @@ class CrudUpdate:
         except Exception as e:
             return {"status": False, "data": [{"error": str(e)}]}  
         finally:
-            close_connection()         
+            close_connection()       
+
+    @staticmethod
+    async def update_project(project_id: str, project: Project):
+        try:
+            db =open_connection()
+            collection = db["Project"]
+            crew_collection = db["Crew"]
+
+            # Check if all the tools exist in the Tool Structure collection
+            crew_ids = [ObjectId(crew_id) for crew_id in project["crews"]]
+            crew_docs = crew_collection.find({"_id": {"$in": crew_ids}})
+            if len(list(crew_docs)) != len(crew_ids):
+                return {"status": False, "data": [{"error": "One or more crews not found in the Crew collection."}]}
+            
+            # Update the agent in the database
+            project_to_be_updated = collection.find_one_and_update(
+                {"_id": ObjectId(project_id)},
+                {"$set": project},
+                upsert=False
+            )
+            if project_to_be_updated == None:
+                return {"status":False, "data": [{"message":"Could'nt find the match"}]}
+            else:
+                return {"status": True, "data": [{"message": "Project updated successfully."}]}
+
+        except Exception as e:
+            return {"status": False, "data": {"error": str(e)}}  
+        finally:
+            close_connection()           

@@ -88,4 +88,22 @@ async def update_crew(crew_id: str, crew: dict):
     crudupdate = CrudUpdate()
     return await crudupdate.update_crew(crew_id,crew)
 
-   
+""".........................PROJECTS.........................."""
+
+#Create project
+@app.post("/project")
+async def create_new_project(project: dict):
+    crudcreator = CrudCreator()
+    return await crudcreator.create_project(project)
+
+#Get projects
+@app.get("/projects")
+async def read_projects(filter_dict: dict = None):
+    crudreader = CrudReader()
+    return await crudreader.get_projects(filter_dict)
+#Update project
+@app.post("/project/{project_id}")
+async def update_crew(project_id: str, project: dict):
+    crudupdate = CrudUpdate()
+    return await crudupdate.update_project(project_id,project)
+

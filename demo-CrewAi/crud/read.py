@@ -21,7 +21,6 @@ class CrudReader:
         finally:
             close_connection()
 
-
     @staticmethod
     async def get_agents(filter_dict: dict = None):
         try:
@@ -80,4 +79,24 @@ class CrudReader:
         except Exception as e:
             return {"status": False, "data": [{"error": str(e)}]}
         finally:
-            close_connection()                 
+            close_connection()   
+
+    @staticmethod
+    async def get_projects(filter_dict: dict = None):
+        try:
+            db = open_connection()
+            collection = db["Project"]
+            if filter_dict is None:
+                filter_dict = {}
+
+            projects = []
+            docs = collection.find(filter_dict, {"_id": 1, "name": 1, "description": 1, "crews": 1, "active": 1}) # add "active": 1 to the projection
+            for doc in docs:
+                if doc.get("active", False): # use get() method to check if the "active" field exists and has a value of True
+                    doc["_id"] = str(doc["_id"])
+                    projects.append(doc)
+            return {"status": True, "projects": projects}
+        except Exception as e:
+            return {"status": False, "data": [{"error": str(e)}]}
+        finally:
+            close_connection()                                      

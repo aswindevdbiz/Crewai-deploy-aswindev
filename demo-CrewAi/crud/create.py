@@ -3,6 +3,7 @@ from ..models.agents import Agent
 from ..models.tools import Tool
 from ..models.tasks import Task
 from ..models.crews import Crew
+from ..models.projects import Project
 from ..utils.mongodb import open_connection, close_connection
 
 class CrudCreator:
@@ -12,10 +13,18 @@ class CrudCreator:
         try:
             db = open_connection()
             collection = db["Tool Structure"]
-
+            
+            # Checking the mandatory fields are there.
             if tool["name"] == "" or tool["description"] == "":
                 return {"status": False, "data": [{"error":"name and description is Mandatory."}]}
-            
+
+            # Checking name duplication.
+            existing_tool = collection.find_one({"name": tool["name"]})
+
+            if existing_tool:
+                return {"status": False, "data": [{"error": "Tool with the same name already exists."}]}
+
+            #Making the tool field to default true.
             tool["active"] = True
             tool_id = collection.insert_one(tool).inserted_id
             return {"status": True, "data": [{"insert id": str(tool_id)}]}
@@ -33,6 +42,7 @@ class CrudCreator:
             tool_collection = db["Tool Structure"]
             agent["active"] = True
 
+            #Checking whether the mandatory fields are there.
             if agent["role"] == "" or agent["goal"] == "" or agent["backstory"] == "" or agent["tools"] == "":
                return {"status": False, "data": [{"error":"role, goal, backstory, tools is Mandatory."}]}
             
@@ -85,6 +95,7 @@ class CrudCreator:
             db = open_connection()
             collection = db["Crew"]
             task_collection = db["Task"]
+            agent_collection = db["Agent"]
             crew["active"] = True
 
             if crew["name"] == "" or crew["description"] == "" or crew["tasks"] == "":
@@ -95,6 +106,12 @@ class CrudCreator:
             task_docs = task_collection.find({"_id": {"$in": task_ids}})
             if len(list(task_docs)) != len(task_ids):
                 return {"status": False, "data": [{"error": "One or more tasks not found in the Task collection."}]}
+            
+            # Check if all the agents exist in the Agent collection
+            agent_ids = [ObjectId(agent_id) for agent_id in crew["agents"]]
+            agent_docs = agent_collection.find({"_id": {"$in": agent_ids}})
+            if len(list(agent_docs)) != len(agent_ids):
+                return {"status": False, "data": [{"error": "One or more agents not found in the Agent collection."}]}
 
             crew_id = collection.insert_one(crew).inserted_id
             return {"status": True, "data": [{"insert id": str(crew_id)}]}
@@ -102,3 +119,26 @@ class CrudCreator:
             return {"status": False, "data": [{"error": str(e)}]}
         finally:
             close_connection()
+
+    @staticmethod
+    async def create_project(project: Project):
+        try:
+            db = open_connection()
+            collection = db["Project"]
+            crew_collection = db["Crew"]
+
+            if project["name"] == "" or project["description"] == "" or project["crews"] == "" :
+               return {"status": False, "data": [{"error":"name, description, crews is Mandatory."}]}
+            
+            # Check if all the tools exist in the Tool Structure collection
+            crew_ids = [ObjectId(crew_id) for crew_id in project["crews"]]
+            crew_docs = crew_collection.find({"_id": {"$in": crew_ids}})
+            if len(list(crew_docs)) != len(crew_ids):
+                return {"status": False, "data": [{"error": "One or more crews not found in the Crew collection."}]}
+
+            project_id = collection.insert_one(project).inserted_id
+            return {"status": True, "data": [{"insert id": str(project_id)}]}
+        except Exception as e:
+            return {"status": False, "data": [{"error": str(e)}]}
+        finally:
+            close_connection()         
